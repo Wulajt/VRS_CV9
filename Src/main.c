@@ -24,12 +24,18 @@
 #include "gpio.h"
 #include "lis3mdltr.h"
 #include "lsm6ds0.h"
+#include "tim.h"
+#include "display.h"
+#include "lps25hb.h"
 
 uint8_t temp = 0;
 float mag[3], acc[3];
 
 void SystemClock_Config(void);
 
+extern uint64_t disp_time;
+uint64_t saved_time;
+double num_to_display = 10;
 
 int main(void)
 {
@@ -43,14 +49,60 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
 
-  lsm6ds0_init();
+
+  uint8_t lsm = lsm6ds0_init();
+
+  setSegments();
+  setDigits();
+
+  LL_mDelay(2000);
+
+  resetDigits();
+  resetSegments();
+
+  MX_TIM3_Init();
+  uint8_t lps = lps25hb_init();
+
+  uint8_t text[21] = "branislav_kutas_98344";
+  uint8_t txtIndex = 0;
+  uint8_t cycleRight = 1;
 
   while (1)
   {
+	  int16_t temp = lps25hb_get_press();
+
+	  if(disp_time > (saved_time + 500))
+	         {
+	             uint8_t toDisplay[4] = "";
+
+	             if (txtIndex >= 17){
+	                 cycleRight = 0;
+	             }
+	             else if (txtIndex <= 0){
+	                 cycleRight = 1;
+	             }
+
+	             for (int i = 0; i<4; i++){
+	                 toDisplay[i] = text[i + txtIndex];
+	             }
+
+	             if (cycleRight){
+	                 txtIndex++;
+	             }
+	             else {
+	                 txtIndex--;
+	             }
+
+	             displayString(toDisplay);
+
+	             saved_time = disp_time;
+	         }
+	    }
+
+
 	  //os			   x      y        z
-	  lsm6ds0_get_acc(acc, (acc+1), (acc+2));
-	  LL_mDelay(50);
-  }
+//	  lsm6ds0_get_acc(acc, (acc+1), (acc+2));
+//	  LL_mDelay(50);
 }
 
 /**
@@ -87,6 +139,7 @@ void SystemClock_Config(void)
   LL_SYSTICK_SetClkSource(LL_SYSTICK_CLKSOURCE_HCLK);
   LL_SetSystemCoreClock(8000000);
   LL_RCC_SetI2CClockSource(LL_RCC_I2C1_CLKSOURCE_HSI);
+  LL_SYSTICK_EnableIT();
 }
 
 

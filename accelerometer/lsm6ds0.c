@@ -7,24 +7,24 @@
 
 #include "lsm6ds0.h"
 
-uint8_t addres = LSM6DS0_DEVICE_ADDRESS_0;
+uint8_t adress_acc = LSM6DS0_DEVICE_ADDRESS_0;
 
 uint8_t lsm6ds0_read_byte(uint8_t reg_addr)
 {
 	uint8_t data = 0;
-	return *(i2c_master_read(&data, 1, reg_addr, addres, 0));
+	return *(i2c_master_read(&data, 1, reg_addr, adress_acc, 0));
 }
 
 
 void lsm6ds0_write_byte(uint8_t reg_addr, uint8_t value)
 {
-	i2c_master_write(value, reg_addr, addres, 0);
+	i2c_master_write(value, reg_addr, adress_acc, 0);
 }
 
 
 void lsm6ds0_readArray(uint8_t * data, uint8_t reg, uint8_t length)
 {
-	i2c_master_read(data, length, reg, addres, 1);
+	i2c_master_read(data, length, reg, adress_acc, 1);
 }
 
 
@@ -79,7 +79,7 @@ uint8_t lsm6ds0_init(void)
 	}
 	else			//if the device is not found on one address, try another one
 	{
-		addres = LSM6DS0_DEVICE_ADDRESS_1;
+		adress_acc = LSM6DS0_DEVICE_ADDRESS_1;
 		val = lsm6ds0_read_byte(LSM6DS0_WHO_AM_I_ADDRES);
 		if(val == LSM6DS0_WHO_AM_I_VALUE)
 		{
