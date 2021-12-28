@@ -29,9 +29,11 @@ void lps25hb_readArray(uint8_t * data, uint8_t reg, uint8_t length)
 
 int8_t lps25hb_get_temp()
 {
-	uint8_t temp[2];
-	lps25hb_readArray(temp, LPS25HB_ADDRESS_TEMP_L, 2);
-	return (((int16_t)((temp[1] << 8) | temp[0])) >> 3)  + 25;
+    uint8_t temp[2];
+    lps25hb_readArray(temp, LPS25HB_ADDRESS_TEMP_L, 2);
+    int16_t temperature = ((temp[1] << 8) | temp[0]);
+
+    return (42.5 + (temperature/480));
 }
 
 int16_t lps25hb_get_press()
@@ -41,8 +43,6 @@ int16_t lps25hb_get_press()
 	lps25hb_readArray(data, LPS25HB_ADDRESS_PRESS_XL, 3);
 
 	uint32_t press = ((data[2] << 16) | (data[1] << 8) | data[0])/4096;
-
-//	return ((int32_t)((data[2] << 16) | (data[1] << 8) | data[0]))/4096;
 
 	return ((int16_t)(press));
 }

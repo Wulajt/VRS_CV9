@@ -37,6 +37,13 @@ extern uint64_t disp_time;
 uint64_t saved_time;
 double num_to_display = 10;
 
+int get_altitude(int8_t temp, int16_t press){
+    double tmp1 = 1013/(double)press;
+    double tmp2 = pow(tmp1, (1/5.257));
+    int alti = ((tmp2 - 1)*(temp + 273))/0.0065;
+    return alti;
+}
+
 int main(void)
 {
   LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
@@ -49,9 +56,6 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
 
-
-  uint8_t lsm = lsm6ds0_init();
-
   setSegments();
   setDigits();
 
@@ -62,6 +66,8 @@ int main(void)
 
   MX_TIM3_Init();
   uint8_t lps = lps25hb_init();
+  uint8_t hts = hts221_init();
+  uint8_t lsm = lsm6ds0_init();
 
   uint8_t text[21] = "branislav_kutas_98344";
   uint8_t txtIndex = 0;
@@ -69,7 +75,12 @@ int main(void)
 
   while (1)
   {
-	  int16_t temp = lps25hb_get_press();
+	  int16_t lps_press = lps25hb_get_press();
+	  int8_t lps_temp = lps25hb_get_temp();
+	  //int8_t lsm_temp = lsm6ds0_get_temp();
+	  //int8_t hts_temp = hts221_get_temp();
+	  int8_t hts_humi = hts221_get_humi();
+	  int alt = get_altitude(lps_temp, lps_press);
 
 	  if(disp_time > (saved_time + 500))
 	         {

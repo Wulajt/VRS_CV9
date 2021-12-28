@@ -24,5 +24,6 @@ Src \
 Startup \
 accelerometer \
 compass \
+humidity \
 pressure \
 

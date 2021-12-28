@@ -17,4 +17,5 @@
 "Startup/startup_stm32f303k8tx.o"
 "accelerometer/lsm6ds0.o"
 "compass/lis3mdltr.o"
+"humidity/hts221.o"
 "pressure/lps25hb.o"
