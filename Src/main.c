@@ -30,9 +30,6 @@
 #include "button.h"
 #include "string.h"
 
-uint8_t temp = 0;
-float mag[3], acc[3];
-
 void SystemClock_Config(void);
 
 uint8_t check_button_state(GPIO_TypeDef* PORT, uint8_t PIN);
@@ -41,9 +38,9 @@ uint8_t switch_state = 0;
 
 extern uint64_t disp_time;
 uint64_t saved_time;
-double num_to_display = 10;
+uint8_t txtIndex = 0;
 
-float get_altitude(int8_t temp, int16_t press){
+float get_altitude(float temp, float press){
     double tmp1 = 1013/(double)press;
     double tmp2 = pow(tmp1, (1/5.257));
     float alti = ((tmp2 - 1)*(temp + 273))/0.0065; // Vypocet nadmorskej vysky
@@ -74,85 +71,79 @@ int main(void)
   uint8_t lps = lps25hb_init();
   uint8_t hts = hts221_init();
 
-  uint8_t text[21];
-  uint8_t txtIndex = 0;
+  uint8_t text[12];
   uint8_t cycleRight = 1;
 
+  uint8_t temp_text[12] = "temp_%.1f";
+  uint8_t hum_text[12] = "hum_%2d";
+  uint8_t bar_text[12] = "bar_%.2f";
+  uint8_t alt_text[12] = "alt_%.1f";
+
+  float lps_temp = lps25hb_get_temp();
+  int8_t hts_humi = hts221_get_humi();
+  float lps_press = lps25hb_get_press();
+  float alt = get_altitude(lps_temp, lps_press);
+
   while (1)
-  {
-	  float lps_press = lps25hb_get_press();
-	  float lps_temp = lps25hb_get_temp();
-	  int8_t hts_humi = hts221_get_humi();
-	  float alt = get_altitude(lps_temp, lps_press);
+    {
+        if(disp_time > (saved_time + 500))
+        {
+            memset(text, 0, 12);
+            switch (switch_state){
+            case 0:
+                lps_temp = lps25hb_get_temp();
+                sprintf(text, temp_text, lps_temp);
+                break;
+            case 1:
+                hts_humi = hts221_get_humi();
+                sprintf(text, hum_text, hts_humi);
+                break;
+            case 2:
+                lps_press = lps25hb_get_press();
+                sprintf(text, bar_text, lps_press);
+                break;
+            case 3:
+                lps_temp = lps25hb_get_temp();
+                lps_press = lps25hb_get_press();
+                alt = get_altitude(lps_temp, lps_press);
+                sprintf(text, alt_text, alt);
+                break;
+            default:
+                break;
+            }
 
-	  if(switch_state == 0){
-		  memset(text, 0, 21);
-		  strcpy(text,"branislav_kutas_98344");
+            auto txt_length = strlen(text);
 
-		  if(disp_time > (saved_time + 500))
-		 	         {
-		 	             uint8_t toDisplay[4] = "";
+            uint8_t toDisplay[4] = "";
 
-		 	             if (txtIndex >= 17){
-		 	                 cycleRight = 0;
-		 	             }
-		 	             else if (txtIndex <= 0){
-		 	                 cycleRight = 1;
-		 	             }
+            if (txtIndex >= (txt_length - 4)){
+                cycleRight = 0;
+            }
+            else if (txtIndex <= 0){
+                cycleRight = 1;
+            }
 
-		 	             for (int i = 0; i<4; i++){
-		 	                 toDisplay[i] = text[i + txtIndex];
-		 	             }
+            uint8_t resolution = 0;
+            uint8_t skipped = 0;
+            for (int i = 0; i<4; i++){
+                if (text[i + txtIndex + resolution] == '.' || resolution > 0){
+                    resolution++;
+                    skipped = 1;
+                }
+                toDisplay[i] = text[i + txtIndex + skipped];
+            }
 
-		 	             if (cycleRight){
-		 	                 txtIndex++;
-		 	             }
-		 	             else {
-		 	                 txtIndex--;
-		 	             }
+            if (cycleRight){
+                txtIndex++;
+            }
+            else {
+                txtIndex--;
+            }
 
-		 	             displayString(toDisplay);
+            displayString(toDisplay, resolution);
 
-		 	             saved_time = disp_time;
-		 	         }
-
-	  }else if(switch_state == 1){
-		  memset(text, 0, 21);
-		  strcpy(text,"aaaaaaaaa_kutas_98344");
-	  }else if(switch_state == 2){
-		  memset(text, 0, 21);
-		  strcpy(text,"bbbbbbbbb_kutas_98344");
-	  }else if(switch_state == 3){
-		  memset(text, 0, 21);
-		  strcpy(text,"ccccccccc_kutas_98344");
-  }
-
-//	  if(disp_time > (saved_time + 500))
-//	         {
-//	             uint8_t toDisplay[4] = "";
-//
-//	             if (txtIndex >= 17){
-//	                 cycleRight = 0;
-//	             }
-//	             else if (txtIndex <= 0){
-//	                 cycleRight = 1;
-//	             }
-//
-//	             for (int i = 0; i<4; i++){
-//	                 toDisplay[i] = text[i + txtIndex];
-//	             }
-//
-//	             if (cycleRight){
-//	                 txtIndex++;
-//	             }
-//	             else {
-//	                 txtIndex--;
-//	             }
-//
-//	             displayString(toDisplay);
-//
-//	             saved_time = disp_time;
-//	         }
+            saved_time = disp_time;
+        }
     }
 }
 
@@ -232,6 +223,7 @@ void EXTI3_IRQHandler(void)
 						BUTTON_EXTI_SAMPLES_REQUIRED))
 	{
 		switch_state += 1;
+		txtIndex = 0;
 
 		if(switch_state >=4){
 			switch_state = 0;

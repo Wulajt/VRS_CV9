@@ -487,10 +487,10 @@ void displayNumber(double num)
 	}
 }
 
-void displayString(uint8_t str[4]){
+void displayString(uint8_t str[4], uint8_t resolution){
     dDisplayData.digit_num = 4;
     dDisplayData.negative = 0;
-    dDisplayData.resolution = 0;
+    dDisplayData.resolution = resolution;
 
     int j = 0;
     for (int i = 3; i>=0; i--){

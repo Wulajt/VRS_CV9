@@ -94,4 +94,4 @@ void set_(void);
 void set_minus(void);
 
 void displayNumber(double num);
-void displayString(uint8_t str[4]);
+void displayString(uint8_t str[4], uint8_t resolution);
