@@ -27,11 +27,17 @@
 #include "tim.h"
 #include "display.h"
 #include "lps25hb.h"
+#include "button.h"
+#include "string.h"
 
 uint8_t temp = 0;
 float mag[3], acc[3];
 
 void SystemClock_Config(void);
+
+uint8_t check_button_state(GPIO_TypeDef* PORT, uint8_t PIN);
+
+uint8_t switch_state = 0;
 
 extern uint64_t disp_time;
 uint64_t saved_time;
@@ -40,7 +46,7 @@ double num_to_display = 10;
 int get_altitude(int8_t temp, int16_t press){
     double tmp1 = 1013/(double)press;
     double tmp2 = pow(tmp1, (1/5.257));
-    int alti = ((tmp2 - 1)*(temp + 273))/0.0065;
+    int alti = ((tmp2 - 1)*(temp + 273))/0.0065; // Vypocet nadmorskej vysky
     return alti;
 }
 
@@ -67,9 +73,8 @@ int main(void)
   MX_TIM3_Init();
   uint8_t lps = lps25hb_init();
   uint8_t hts = hts221_init();
-  uint8_t lsm = lsm6ds0_init();
 
-  uint8_t text[21] = "branislav_kutas_98344";
+  uint8_t text[21];
   uint8_t txtIndex = 0;
   uint8_t cycleRight = 1;
 
@@ -77,43 +82,74 @@ int main(void)
   {
 	  int16_t lps_press = lps25hb_get_press();
 	  int8_t lps_temp = lps25hb_get_temp();
-	  //int8_t lsm_temp = lsm6ds0_get_temp();
-	  //int8_t hts_temp = hts221_get_temp();
 	  int8_t hts_humi = hts221_get_humi();
 	  int alt = get_altitude(lps_temp, lps_press);
 
-	  if(disp_time > (saved_time + 500))
-	         {
-	             uint8_t toDisplay[4] = "";
+	  if(switch_state == 0){
+		  strcpy(text,"branislav_kutas_98344");
 
-	             if (txtIndex >= 17){
-	                 cycleRight = 0;
-	             }
-	             else if (txtIndex <= 0){
-	                 cycleRight = 1;
-	             }
+		  if(disp_time > (saved_time + 500))
+		 	         {
+		 	             uint8_t toDisplay[4] = "";
 
-	             for (int i = 0; i<4; i++){
-	                 toDisplay[i] = text[i + txtIndex];
-	             }
+		 	             if (txtIndex >= 17){
+		 	                 cycleRight = 0;
+		 	             }
+		 	             else if (txtIndex <= 0){
+		 	                 cycleRight = 1;
+		 	             }
 
-	             if (cycleRight){
-	                 txtIndex++;
-	             }
-	             else {
-	                 txtIndex--;
-	             }
+		 	             for (int i = 0; i<4; i++){
+		 	                 toDisplay[i] = text[i + txtIndex];
+		 	             }
 
-	             displayString(toDisplay);
+		 	             if (cycleRight){
+		 	                 txtIndex++;
+		 	             }
+		 	             else {
+		 	                 txtIndex--;
+		 	             }
 
-	             saved_time = disp_time;
-	         }
+		 	             displayString(toDisplay);
+
+		 	             saved_time = disp_time;
+		 	         }
+
+	  }else if(switch_state == 1){
+		  strcpy(text,"aaaaaaaaa_kutas_98344");
+	  }else if(switch_state == 2){
+		  strcpy(text,"bbbbbbbbb_kutas_98344");
+	  }else if(switch_state == 3){
+		  strcpy(text,"ccccccccc_kutas_98344");
+  }
+
+//	  if(disp_time > (saved_time + 500))
+//	         {
+//	             uint8_t toDisplay[4] = "";
+//
+//	             if (txtIndex >= 17){
+//	                 cycleRight = 0;
+//	             }
+//	             else if (txtIndex <= 0){
+//	                 cycleRight = 1;
+//	             }
+//
+//	             for (int i = 0; i<4; i++){
+//	                 toDisplay[i] = text[i + txtIndex];
+//	             }
+//
+//	             if (cycleRight){
+//	                 txtIndex++;
+//	             }
+//	             else {
+//	                 txtIndex--;
+//	             }
+//
+//	             displayString(toDisplay);
+//
+//	             saved_time = disp_time;
+//	         }
 	    }
-
-
-	  //os			   x      y        z
-//	  lsm6ds0_get_acc(acc, (acc+1), (acc+2));
-//	  LL_mDelay(50);
 }
 
 /**
@@ -153,6 +189,56 @@ void SystemClock_Config(void)
   LL_SYSTICK_EnableIT();
 }
 
+uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t samples_window, uint8_t samples_required)
+{
+		uint8_t button_state = 0, timeout = 0;
+
+		while(button_state < samples_required && timeout < samples_window)
+		{
+			if((LL_GPIO_IsInputPinSet(PORT, PIN)))
+			{
+				button_state += 1;
+			}
+			else
+			{
+				button_state = 0;
+			}
+
+			timeout += 1;
+			LL_mDelay(1);
+		}
+
+		if((button_state >= samples_required) && (timeout <= samples_window))
+		{
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}
+}
+
+
+void EXTI3_IRQHandler(void)
+{
+	if(checkButtonState(GPIO_PORT_BUTTON,
+						GPIO_PIN_BUTTON,
+						BUTTON_EXTI_TRIGGER,
+						BUTTON_EXTI_SAMPLES_WINDOW,
+						BUTTON_EXTI_SAMPLES_REQUIRED))
+	{
+		switch_state += 1;
+	}
+
+	/* Clear EXTI4 pending register flag */
+	//EXTI->PR |= (EXTI_PR_PIF4);
+	//LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_4);
+
+	if (LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_3) != RESET)
+	{
+	    LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_3);
+	}
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
@@ -162,7 +248,10 @@ void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-
+  __disable_irq();
+  while (1)
+  {
+  }
   /* USER CODE END Error_Handler_Debug */
 }
 

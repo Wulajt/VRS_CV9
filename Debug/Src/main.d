@@ -20,7 +20,7 @@ Src/main.o: ../Src/main.c ../Inc/main.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_ll_tim.h ../Inc/i2c.h \
  ../Inc/main.h ../Inc/gpio.h ../compass/lis3mdltr.h \
  ../accelerometer/lsm6ds0.h ../Inc/tim.h ../Inc/display.h \
- ../pressure/lps25hb.h
+ ../pressure/lps25hb.h ../Inc/button.h
 
 ../Inc/main.h:
 
@@ -77,3 +77,5 @@ Src/main.o: ../Src/main.c ../Inc/main.h \
 ../Inc/display.h:
 
 ../pressure/lps25hb.h:
+
+../Inc/button.h:
