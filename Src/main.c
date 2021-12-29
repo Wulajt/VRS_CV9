@@ -43,10 +43,10 @@ extern uint64_t disp_time;
 uint64_t saved_time;
 double num_to_display = 10;
 
-int get_altitude(int8_t temp, int16_t press){
+float get_altitude(int8_t temp, int16_t press){
     double tmp1 = 1013/(double)press;
     double tmp2 = pow(tmp1, (1/5.257));
-    int alti = ((tmp2 - 1)*(temp + 273))/0.0065; // Vypocet nadmorskej vysky
+    float alti = ((tmp2 - 1)*(temp + 273))/0.0065; // Vypocet nadmorskej vysky
     return alti;
 }
 
@@ -80,12 +80,13 @@ int main(void)
 
   while (1)
   {
-	  int16_t lps_press = lps25hb_get_press();
-	  int8_t lps_temp = lps25hb_get_temp();
+	  float lps_press = lps25hb_get_press();
+	  float lps_temp = lps25hb_get_temp();
 	  int8_t hts_humi = hts221_get_humi();
-	  int alt = get_altitude(lps_temp, lps_press);
+	  float alt = get_altitude(lps_temp, lps_press);
 
 	  if(switch_state == 0){
+		  memset(text, 0, 21);
 		  strcpy(text,"branislav_kutas_98344");
 
 		  if(disp_time > (saved_time + 500))
@@ -116,10 +117,13 @@ int main(void)
 		 	         }
 
 	  }else if(switch_state == 1){
+		  memset(text, 0, 21);
 		  strcpy(text,"aaaaaaaaa_kutas_98344");
 	  }else if(switch_state == 2){
+		  memset(text, 0, 21);
 		  strcpy(text,"bbbbbbbbb_kutas_98344");
 	  }else if(switch_state == 3){
+		  memset(text, 0, 21);
 		  strcpy(text,"ccccccccc_kutas_98344");
   }
 
@@ -149,7 +153,7 @@ int main(void)
 //
 //	             saved_time = disp_time;
 //	         }
-	    }
+    }
 }
 
 /**
@@ -228,6 +232,10 @@ void EXTI3_IRQHandler(void)
 						BUTTON_EXTI_SAMPLES_REQUIRED))
 	{
 		switch_state += 1;
+
+		if(switch_state >=4){
+			switch_state = 0;
+		}
 	}
 
 	/* Clear EXTI4 pending register flag */

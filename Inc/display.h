@@ -91,6 +91,7 @@ void setX(void);
 void setY(void);
 void setZ(void);
 void set_(void);
+void set_minus(void);
 
 void displayNumber(double num);
 void displayString(uint8_t str[4]);

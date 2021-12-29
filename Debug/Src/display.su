@@ -44,8 +44,9 @@ display.c:364:6:setW	8	static
 display.c:375:6:setX	8	static
 display.c:383:6:setZ	8	static
 display.c:391:6:set_	8	static
-display.c:401:6:displayNumber	32	static
-display.c:484:6:displayString	24	static
-display.c:499:6:setDigit	16	static
-display.c:522:6:updateDisplay	24	static
-display.c:695:6:TIM3_IRQHandler	8	static
+display.c:397:6:set_minus	8	static
+display.c:407:6:displayNumber	32	static
+display.c:490:6:displayString	24	static
+display.c:505:6:setDigit	16	static
+display.c:528:6:updateDisplay	24	static
+display.c:705:6:TIM3_IRQHandler	8	static

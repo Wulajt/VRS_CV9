@@ -394,6 +394,12 @@ void set_(void)
 	LL_GPIO_ResetOutputPin(SEGMENTD_PORT, SEGMENTD_PIN);
 }
 
+void set_minus(void)
+{
+	// G
+	LL_GPIO_ResetOutputPin(SEGMENTG_PORT, SEGMENTG_PIN);
+}
+
 
 /**
  * Pre-process number before it is displayed. Extract digits of the number
@@ -676,6 +682,10 @@ void updateDisplay(void)
     		  setDigit(i);
     		  set_();
     		  break;
+			case 45:
+			  setDigit(i);
+			  set_minus();
+			  break;
 		}
 
 		if(dDisplayData.resolution == i)
